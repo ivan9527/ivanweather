@@ -5,6 +5,10 @@
     android:background="#FFF"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
+    <LinearLayout
+        android:background="?attr/colorPrimary"
+        android:layout_width="match_parent"
+        android:layout_height="20dp"/>
 
     <RelativeLayout
         android:layout_width="match_parent"
