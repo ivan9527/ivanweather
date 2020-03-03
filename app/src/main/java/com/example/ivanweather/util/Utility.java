@@ -93,11 +93,11 @@ public class Utility {
     public static boolean handleFollowResponse(String countyName , int cityId ,String weatherId){
 
        if(!countyName.isEmpty() && !weatherId.isEmpty() & cityId!=0){
-           FollowCounty county = new FollowCounty();
-           county.setCountyName(countyName);
-           county.setWeatherId(weatherId);
-           county.setCityId(cityId);
-           county.save();
+           FollowCounty followCounty = new FollowCounty();
+           followCounty.setCountyName(countyName);
+           followCounty.setWeatherId(weatherId);
+           followCounty.setCityId(cityId);
+           followCounty.save();
            return true;
        }
 

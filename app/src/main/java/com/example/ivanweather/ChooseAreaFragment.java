@@ -110,23 +110,24 @@ public class ChooseAreaFragment extends Fragment {
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                if(currentLevel == LEVEL_FOLLOW){
-                    WeatherActivity activity = (WeatherActivity) getActivity();
-                    activity.drawerLayout.closeDrawers();
-                    activity.swipeRefresh.setRefreshing(true);
-                    activity.requestWeather(followList.get(position).getWeatherId());
-                }else if(currentLevel == LEVEL_PROVINCE){
+                if(currentLevel == LEVEL_PROVINCE){
                     selectedProvince = provinceList.get(position);
                     queryCities();
                 } else if (currentLevel == LEVEL_CITY) {
                    selectedCity = cityList.get(position);
                    queryCounties();
-                } else if (currentLevel == LEVEL_COUNTY){
-                    String weatherId = countyList.get(position).getWeatherId();
-                    //如果用户选择了地区，则把数据添加到关注列表
-                    List<FollowCounty> followCounties = DataSupport.where("cityid = ?",String.valueOf(selectedCity.getId())).find(FollowCounty.class);
-                    if(followCounties.size() == 0){
-                        Utility.handleFollowResponse(countyList.get(position).getCountyName(),countyList.get(position).getCityId(),countyList.get(position).getWeatherId());
+                } else if (currentLevel == LEVEL_COUNTY || currentLevel == LEVEL_FOLLOW){
+
+                    String weatherId ;
+                    if(currentLevel == LEVEL_FOLLOW){//判断不同的列表，选择不用的数据
+                       weatherId = followList.get(position).getWeatherId();
+                    }else{
+                        weatherId = countyList.get(position).getWeatherId();
+                        //如果用户选择了地区，则把数据添加到关注列表
+                        List<FollowCounty> followCounties = DataSupport.where("cityid = ?",String.valueOf(selectedCity.getId())).find(FollowCounty.class);
+                        if(followCounties.size() == 0){
+                            Utility.handleFollowResponse(countyList.get(position).getCountyName(),countyList.get(position).getCityId(),countyList.get(position).getWeatherId());
+                        }
                     }
                     if(getActivity() instanceof MainActivity){
                         Intent intent = new Intent(getActivity(),WeatherActivity.class);
@@ -137,7 +138,7 @@ public class ChooseAreaFragment extends Fragment {
                         WeatherActivity activity = (WeatherActivity) getActivity();
                         activity.drawerLayout.closeDrawers();
                         activity.swipeRefresh.setRefreshing(true);
-                        activity.requestWeather(weatherId);
+                            activity.requestWeather(weatherId);
                     }
 
                 }

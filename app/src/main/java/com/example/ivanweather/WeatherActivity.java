@@ -112,18 +112,18 @@ public class WeatherActivity extends AppCompatActivity {
         swipeRefresh.setColorSchemeResources(R.color.colorPrimary);
         drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         navButton = (Button) findViewById(R.id.nav_button);
-        Button followBtn = findViewById(R.id.nav_list);
         navButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 drawerLayout.openDrawer(GravityCompat.START);
+                //如果用户之前点击过关注列表，现在又重新选择数据，就重新刷新listview
                 if(getFrament.currentLevel == getFrament.LEVEL_FOLLOW){
                    getFrament.homeData();
                 }
 
             }
         });
-        followBtn.setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.nav_list).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 drawerLayout.openDrawer(GravityCompat.START);
@@ -144,9 +144,9 @@ public class WeatherActivity extends AppCompatActivity {
         String bingPic = prefs.getString("bing_pic",null);
         String date = prefs.getString("date",null);
         bingPicImg = findViewById(R.id.bing_pic_img);
+        //获取当前时间
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy年MM月dd日");// HH:mm:ss
         Date date1 = new Date(System.currentTimeMillis());
-        //获取当前时间
         if(bingPic != null && date.equals(simpleDateFormat.format(date1))){
             Glide.with(this).load(bingPic).into(bingPicImg);
         }else{
