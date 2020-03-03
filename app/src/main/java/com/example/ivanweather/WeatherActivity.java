@@ -1,11 +1,13 @@
 package com.example.ivanweather;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
-import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
@@ -14,15 +16,19 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.GridLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
+import com.example.ivanweather.db.County;
+import com.example.ivanweather.db.FollowCounty;
+import com.example.ivanweather.db.Province;
 import com.example.ivanweather.gson.Forecast;
 import com.example.ivanweather.gson.Weather;
 import com.example.ivanweather.service.AutoUpdateService;
@@ -30,14 +36,21 @@ import com.example.ivanweather.util.HttpUtil;
 import com.example.ivanweather.util.Utility;
 
 import org.jetbrains.annotations.NotNull;
+import org.litepal.crud.DataSupport;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
+import interfaces.heweather.com.interfacesmodule.view.HeWeather;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.Response;
 
 public class WeatherActivity extends AppCompatActivity {
+
     private ScrollView weatherLayout;
 
     private TextView titleCity;
@@ -64,6 +77,9 @@ public class WeatherActivity extends AppCompatActivity {
     private String mWeatherId;
     public DrawerLayout drawerLayout;
     private Button navButton;
+    private  ListView listView;
+    private  TextView title;
+    ChooseAreaFragment getFrament;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -87,6 +103,8 @@ public class WeatherActivity extends AppCompatActivity {
         comfortText = (TextView) findViewById(R.id.comfort_text);
         carWashText = (TextView) findViewById(R.id.car_wash_text);
         sportText = (TextView) findViewById(R.id.sport_text);
+        FragmentManager fm = getSupportFragmentManager();
+        getFrament = (ChooseAreaFragment) fm.findFragmentById(R.id.choose_area_fragment);
 
         forecastLayout =(LinearLayout) findViewById(R.id.forecast_layout);
         bingPicImg = findViewById(R.id.bing_pic_img);
@@ -94,20 +112,45 @@ public class WeatherActivity extends AppCompatActivity {
         swipeRefresh.setColorSchemeResources(R.color.colorPrimary);
         drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         navButton = (Button) findViewById(R.id.nav_button);
+        Button followBtn = findViewById(R.id.nav_list);
         navButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 drawerLayout.openDrawer(GravityCompat.START);
+                if(getFrament.currentLevel == getFrament.LEVEL_FOLLOW){
+                   getFrament.homeData();
+                }
+
+            }
+        });
+        followBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                drawerLayout.openDrawer(GravityCompat.START);
+                getFrament.titleText.setText("关注列表");
+                getFrament.backButton.setVisibility(View.GONE);
+                getFrament.followList = DataSupport.findAll(FollowCounty.class);
+                getFrament.dataList.clear();
+                for (FollowCounty follow:getFrament.followList){
+                    getFrament.dataList.add(follow.getCountyName());
+                }
+                getFrament.adapter.notifyDataSetChanged();
+                getFrament.listView.setSelection(0);
+                getFrament.currentLevel = getFrament.LEVEL_FOLLOW;
             }
         });
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         String bingPic = prefs.getString("bing_pic",null);
-        if(bingPic != null){
+        String date = prefs.getString("date",null);
+        bingPicImg = findViewById(R.id.bing_pic_img);
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy年MM月dd日");// HH:mm:ss
+        Date date1 = new Date(System.currentTimeMillis());
+        //获取当前时间
+        if(bingPic != null && date.equals(simpleDateFormat.format(date1))){
             Glide.with(this).load(bingPic).into(bingPicImg);
         }else{
             loadBingPic();
-
         }
         String weatherString= prefs.getString("weather",null);
 
@@ -134,7 +177,10 @@ public class WeatherActivity extends AppCompatActivity {
     /**
      * 加载必应每日一图
      */
-    private void loadBingPic(){
+    public void loadBingPic(){
+        final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy年MM月dd日");// HH:mm:ss
+        //获取当前时间
+         final Date date = new Date(System.currentTimeMillis());
         String requestBingPic = "http://guolin.tech/api/bing_pic";
         HttpUtil.sendOkHttpRequest(requestBingPic, new Callback() {
             @Override
@@ -147,6 +193,7 @@ public class WeatherActivity extends AppCompatActivity {
                 final String bingPic = response.body().string();
                 SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(WeatherActivity.this).edit();
                 editor.putString("bing_pic",bingPic);
+                editor.putString("date",simpleDateFormat.format(date)+"");
                 editor.apply();
                 runOnUiThread(new Runnable() {
                     @Override

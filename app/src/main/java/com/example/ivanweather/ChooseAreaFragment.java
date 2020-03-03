@@ -20,6 +20,7 @@ import androidx.fragment.app.Fragment;
 
 import com.example.ivanweather.db.City;
 import com.example.ivanweather.db.County;
+import com.example.ivanweather.db.FollowCounty;
 import com.example.ivanweather.db.Province;
 import com.example.ivanweather.util.HttpUtil;
 import com.example.ivanweather.util.Utility;
@@ -42,17 +43,19 @@ public class ChooseAreaFragment extends Fragment {
 
     public static final int LEVEL_COUNTY = 2;
 
+    public static final int LEVEL_FOLLOW = 3;
+
     private ProgressDialog progressDialog;
 
-    private TextView titleText;
+    public TextView titleText;
 
-    private Button backButton;
+    public Button backButton;
 
-    private ListView listView;
+    public ListView listView;
 
-    private ArrayAdapter<String> adapter;
+    public ArrayAdapter<String> adapter;
 
-    private List<String> dataList = new ArrayList<>();
+    public List<String> dataList = new ArrayList<>();
 
     /**
      * 省列表
@@ -68,6 +71,10 @@ public class ChooseAreaFragment extends Fragment {
      * 县列表
      */
     private List<County> countyList;
+    /**
+     * 已关注列表
+     */
+    public List<FollowCounty> followList;
 
     /**
      * 选中的省份
@@ -82,7 +89,7 @@ public class ChooseAreaFragment extends Fragment {
     /**
      * 当前选中的级别
      */
-    private int currentLevel;
+    public int currentLevel;
 
     @Nullable
     @Override
@@ -94,7 +101,6 @@ public class ChooseAreaFragment extends Fragment {
         listView = view.findViewById(R.id.list_view);
         adapter = new ArrayAdapter<>(getContext(),android.R.layout.simple_list_item_1,dataList);
         listView.setAdapter(adapter);
-
         return view;
     }
 
@@ -104,7 +110,12 @@ public class ChooseAreaFragment extends Fragment {
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                if(currentLevel == LEVEL_PROVINCE){
+                if(currentLevel == LEVEL_FOLLOW){
+                    WeatherActivity activity = (WeatherActivity) getActivity();
+                    activity.drawerLayout.closeDrawers();
+                    activity.swipeRefresh.setRefreshing(true);
+                    activity.requestWeather(followList.get(position).getWeatherId());
+                }else if(currentLevel == LEVEL_PROVINCE){
                     selectedProvince = provinceList.get(position);
                     queryCities();
                 } else if (currentLevel == LEVEL_CITY) {
@@ -112,6 +123,11 @@ public class ChooseAreaFragment extends Fragment {
                    queryCounties();
                 } else if (currentLevel == LEVEL_COUNTY){
                     String weatherId = countyList.get(position).getWeatherId();
+                    //如果用户选择了地区，则把数据添加到关注列表
+                    List<FollowCounty> followCounties = DataSupport.where("cityid = ?",String.valueOf(selectedCity.getId())).find(FollowCounty.class);
+                    if(followCounties.size() == 0){
+                        Utility.handleFollowResponse(countyList.get(position).getCountyName(),countyList.get(position).getCityId(),countyList.get(position).getWeatherId());
+                    }
                     if(getActivity() instanceof MainActivity){
                         Intent intent = new Intent(getActivity(),WeatherActivity.class);
                         intent.putExtra("weather_id",weatherId);
@@ -137,6 +153,10 @@ public class ChooseAreaFragment extends Fragment {
                 }
             }
         });
+        queryProvinces();
+    }
+
+    public void homeData(){
         queryProvinces();
     }
 

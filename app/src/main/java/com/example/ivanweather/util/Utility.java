@@ -4,6 +4,7 @@ import android.text.TextUtils;
 
 import com.example.ivanweather.db.City;
 import com.example.ivanweather.db.County;
+import com.example.ivanweather.db.FollowCounty;
 import com.example.ivanweather.db.Province;
 import com.example.ivanweather.gson.Weather;
 import com.google.gson.Gson;
@@ -83,6 +84,23 @@ public class Utility {
             }
 
         }
+        return false;
+    }
+
+    /**
+     * 保存关注的数据
+     */
+    public static boolean handleFollowResponse(String countyName , int cityId ,String weatherId){
+
+       if(!countyName.isEmpty() && !weatherId.isEmpty() & cityId!=0){
+           FollowCounty county = new FollowCounty();
+           county.setCountyName(countyName);
+           county.setWeatherId(weatherId);
+           county.setCityId(cityId);
+           county.save();
+           return true;
+       }
+
         return false;
     }
 

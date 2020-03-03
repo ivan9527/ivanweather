@@ -6,6 +6,7 @@
         <mapping class="com.example.ivanweather.db.Province" />
         <mapping class="com.example.ivanweather.db.City" />
         <mapping class="com.example.ivanweather.db.County" />
+        <mapping class="com.example.ivanweather.db.FollowCounty" />
     </list>
 
 </litepal>
